@@ -17,19 +17,21 @@ int main()
 {
 	// setting up the board	
 	uint64_t pieces[13];	
-	pieces[0] = 65280ULL;
-	pieces[1] = 129ULL;
-	pieces[2] = 66ULL;
-	pieces[3] = 36ULL;
-	pieces[4] = 16ULL;
-	pieces[5] = 8ULL;
-	pieces[6] = 71776119061217280ULL;
-	pieces[7] = 9295429630892703744ULL;
-	pieces[8] = 4755801206503243776ULL;
-	pieces[9] = 2594073385365405696ULL;
-	pieces[10] = 1152921504606846976ULL;
-	pieces[11] = 576460752303423488ULL;
-	pieces[12] = 281474976645120ULL;
+	pieces[0] = 65280ULL;                   // white pawns
+	pieces[1] = 129ULL;                     // white rooks
+	pieces[2] = 66ULL;                      // white knights
+	pieces[3] = 36ULL;                      // white bishops
+	pieces[4] = 16ULL;                      // white queens
+	pieces[5] = 8ULL;                       // white kings
+                                            
+	pieces[6] = 71776119061217280ULL;       // black pawns
+	pieces[7] = 9295429630892703744ULL;     // black rooks
+	pieces[8] = 4755801206503243776ULL;     // black knights
+	pieces[9] = 2594073385365405696ULL;     // black bishops
+	pieces[10] = 1152921504606846976ULL;    // black queens
+	pieces[11] = 576460752303423488ULL;     // black kings
+
+	pieces[12] = 281474976645120ULL;        // empty tiles
 
 
 	printf("Chess program.\n");
