@@ -4,8 +4,14 @@
 // variables
 char move[4];
 
+
+
 // function initilaizations
 void binary_printer_64(uint64_t x);
+int move_from(char *move);
+int move_to(char *move);
+
+
 
 int main()
 {
@@ -35,17 +41,30 @@ int main()
 	printf(" --+---+---+---+---+---+---+---+---+\n");
 	printf(" 6 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-        printf(" 5 |   |   |   |   |   |   |   |   |\n");
+    printf(" 5 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-        printf(" 4 |   |   |   |   |   |   |   |   |\n");
+    printf(" 4 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-        printf(" 3 |   |   |   |   |   |   |   |   |\n");
+    printf(" 3 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-        printf(" 2 | P | P | P | P | P | P | P | P |\n");
+    printf(" 2 | P | P | P | P | P | P | P | P |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
 	printf(" 1 | R | N | B | Q | K | B | N | R |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
 	printf("   | a | b | c | d | e | f | g | h |\n\n");
+
+	// print the indices of the tiles
+	for (int i=64; i>0; i--)
+	{
+		if ((i%8) == 0)
+		{
+			putchar('\n');
+		}
+		printf("%d\t", i);
+
+	}
+	putchar('\n');
+	putchar('\n');
 
 	// printing the values of chess pieces (debug)
 	for (int i=0; i<13; i++)
@@ -67,7 +86,9 @@ int main()
 	printf("data = %d, row = %d\n", move[1], move[1]-48);
 	printf("data = %d, file = %d\n", move[2], move[2]-96);
 	printf("data = %d, row = %d\n", move[3], move[3]-48);
-	
+
+	printf("%d\n", move_from(move));
+	printf("%d\n", move_to(move));
 /*
 	for (int i=40; i<120; i++)
 	{
@@ -105,4 +126,20 @@ void binary_printer_64(uint64_t x)
       putchar('\n');
 }
 
+int move_from(char *move)
+{
+	int col = move[0] - 96;
+	int row = move[1] - 48;
+	int pos = (9-col) + (8*(row-1));
 
+	return pos;
+}
+
+int move_to(char *move)
+{
+	int col = move[2] - 96;
+	int row = move[3] - 48;
+	int pos = (9-col) + (8*(row-1));
+
+	return pos;
+}
