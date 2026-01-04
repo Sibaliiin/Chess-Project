@@ -55,10 +55,25 @@ int main()
 	}
 
 	// inputting a move
-	//
-	//
-	//
+	printf("Please enter a move: ");
+	scanf(" %s", move);
+	printf("\nDEBUG INFO: YOUR MOVE\n");
+	printf("move[0] = %c, data = %d\n", move[0], move[0]);
+	printf("move[1] = %c, data = %d\n", move[1], move[1]);
+	printf("move[2] = %c, data = %d\n", move[2], move[2]);
+	printf("move[3] = %c, data = %d\n", move[3], move[3]);
+
+	printf("data = %d, file = %d\n", move[0], move[0]-96);
+	printf("data = %d, row = %d\n", move[1], move[1]-48);
+	printf("data = %d, file = %d\n", move[2], move[2]-96);
+	printf("data = %d, row = %d\n", move[3], move[3]-48);
 	
+/*
+	for (int i=40; i<120; i++)
+	{
+		printf("c = %c, d = %d\n", i, i);
+	}
+*/
 
 	return 0;
 }
@@ -89,3 +104,5 @@ void binary_printer_64(uint64_t x)
 
       putchar('\n');
 }
+
+

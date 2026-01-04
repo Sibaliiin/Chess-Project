@@ -46,5 +46,6 @@ The first problem I need to tackle is figuring out how I want the program to han
 ### Implementation
 
 The user will input four characters, for example: "e2e4", meaning the piece on e2 will move to e4; "f7g8", the piece on f7 will move to g8, etc.
-
+We will use the "data behind the characters" to decode the input. For example, if we print out "e" as a character, we will get "e". But: if we print it out as a "number", we will get "101".
+Since the numbers and leters are ordered, we can easily turn the "e file" into a number, namely the fifth file: 101 - 96. 
 
