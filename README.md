@@ -28,7 +28,16 @@ The "empty" tiles will have a 64 bit number aswell with an initial value of:
 ``` bash
 00000000 00000000 11111111 11111111 11111111 11111111 00000000 00000000
 ```
+These 64-bit numbers will be stored inside a list:
+``` c
+uint64_t pieces[13];
 
+pieces[0] = "value of white pawns";
+pieces[1] = "value of white rooks";
+...
+pieces[12] = "value of black king(s)";
+pieces[13] = "value of empty tiles";
+```
 ## Input
 ### Basic Idea
 
