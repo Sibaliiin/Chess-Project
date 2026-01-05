@@ -10,6 +10,7 @@ char move[4];
 void binary_printer_64(uint64_t x);
 int move_from(char *move);
 int move_to(char *move);
+uint64_t get_piece(char *move, uint64_t pieces[]);
 
 
 
@@ -144,4 +145,10 @@ int move_to(char *move)
 	int pos = (9-col) + (8*(row-1));
 
 	return pos;
+}
+
+
+uint64_t get_piece(char *move, uint64_t pieces[])
+{
+
 }
