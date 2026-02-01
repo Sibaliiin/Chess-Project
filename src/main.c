@@ -16,6 +16,34 @@ uint64_t get_piece(char *move, uint64_t pieces[]);
 
 int main()
 {
+	// thinking about fen strings
+	char start_pos[64] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+	int length_pos = 0;
+	for (int i=0; i<sizeof(start_pos); i++)
+	{
+		printf("%c\t%d\n", start_pos[i], start_pos[i]);
+		if (start_pos[i] != 0)	
+		{
+			length_pos += 1;
+		}
+	}
+
+	for (int i=0; i<length_pos; i++)
+	{
+		if (length_pos[i] == 47)
+		{
+			for (int j=0; j<8; j++)
+			{
+				printf("\n........\n");
+			}
+		}
+	}
+
+
+
+	printf("length of fen string: %d\n", length_pos);
+
+
 	// setting up the board	
 	uint64_t pieces[13];	
 	pieces[0] = 65280ULL;                   // white pawns
@@ -44,13 +72,13 @@ int main()
 	printf(" --+---+---+---+---+---+---+---+---+\n");
 	printf(" 6 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-    printf(" 5 |   |   |   |   |   |   |   |   |\n");
+	printf(" 5 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-    printf(" 4 |   |   |   |   |   |   |   |   |\n");
+	printf(" 4 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-    printf(" 3 |   |   |   |   |   |   |   |   |\n");
+	printf(" 3 |   |   |   |   |   |   |   |   |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
-    printf(" 2 | P | P | P | P | P | P | P | P |\n");
+	printf(" 2 | P | P | P | P | P | P | P | P |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
 	printf(" 1 | R | N | B | Q | K | B | N | R |\n");
 	printf(" --+---+---+---+---+---+---+---+---+\n");
@@ -79,7 +107,7 @@ int main()
 	// inputting a move
 	printf("Please enter a move: ");
 	scanf(" %s", move);
-	printf("\nDEBUG INFO: YOUR MOVE\n");
+	printf("\nDEBUG INFO: YOUR MOVE: %s\n", move);
 	printf("move[0] = %c, data = %d\n", move[0], move[0]);
 	printf("move[1] = %c, data = %d\n", move[1], move[1]);
 	printf("move[2] = %c, data = %d\n", move[2], move[2]);
