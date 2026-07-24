@@ -1,4 +1,4 @@
-Chess Project.
+Chess Project written in C. Can be played from the terminal.
 
 Build using:
 

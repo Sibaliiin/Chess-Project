@@ -169,9 +169,9 @@ int main()
 	printf("piece index: %d\n", get_piece_from(move, pieces));
 	printf("piece index: %d\n", get_piece_to(move, pieces));
 
-	print_board(board_display);
 	print_indices();
 	print_values(pieces);
+	print_board(board_display);
 
 	move[0] = 0;
 	move[1] = 0;
