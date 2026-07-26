@@ -53,7 +53,6 @@ int main()
 	// setting up the board
 	char fen_string_pieces[100] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 	char fen_string[100] = "8/1P3p2/7K/3R4/pP6/6k1/p3r2R/6r1 w - - 0 1";
-	//char fen_string_pieces[100] = "6R1/4N1P1/P4p2/p6N/2Q4p/4pnbb/8/K3k2B";
 	char board_display[65];
 
 	// writing to the board display string from the given fen string
@@ -162,6 +161,30 @@ int main()
 
 	print_board(board_display);
 
+	// Game Loop
+	int your_turn = 0;
+
+	while(your_turn < 3)
+	{
+		printf("Please enter a move: ");
+		scanf(" %s", move);
+		
+		print_values(pieces);
+		printf("piece index: %d\n", get_piece_from(move, pieces));
+		printf("piece index: %d\n", get_piece_to(move, pieces));
+		
+		move[0] = 0;
+		move[1] = 0;
+		move[2] = 0;
+		move[3] = 0;
+		
+		printf("New round! %d\n", your_turn);
+		print_board(board_display);
+
+		your_turn += 1;
+
+	}
+	/*
 	// inputting a move
 	printf("Please enter a move: ");
 	scanf(" %s", move);
@@ -177,6 +200,10 @@ int main()
 	move[1] = 0;
 	move[2] = 0;
 	move[3] = 0;
+
+	*/
+
+	printf("game loop has been stopped. stopping program!\n");
 
 	return 0;
 }
@@ -244,7 +271,7 @@ int get_piece_from(char *move, uint64_t pieces[])
 		}
 	}
 
-	printf("from_index = ");
+	printf("from_index =\t");
 	binary_printer_64(from_index);
 
 	return piece_index;
@@ -267,7 +294,7 @@ int get_piece_to(char *move, uint64_t pieces[])
 		}
 	}
 
-	printf("to_index = ");
+	printf("to_index =\t");
 	binary_printer_64(to_index);
 
 	return piece_index;
