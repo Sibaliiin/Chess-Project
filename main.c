@@ -21,6 +21,7 @@ u64 one_64 = 1ULL;
 // function initilaizations
 // printing functions
 void print_board(char *board_display);
+void print_board_debug(char *board_display, u64 *pieces);
 void print_indices();
 void print_values(u64 *pieces);
 void binary_printer_64(uint64_t x);
@@ -159,12 +160,14 @@ int main()
 		}
 	}
 
-	print_board(board_display);
+	//print_board(board_display);
+	putchar('\n');
+	print_board_debug(board_display, pieces);
 
 	// Game Loop
 	int your_turn = 0;
 
-	while(your_turn < 3)
+	while(your_turn < 1)
 	{
 		printf("Please enter a move: ");
 		scanf(" %s", move);
@@ -179,7 +182,7 @@ int main()
 		move[3] = 0;
 		
 		printf("New round! %d\n", your_turn);
-		print_board(board_display);
+		print_board_debug(board_display, pieces);
 
 		your_turn += 1;
 
@@ -233,7 +236,6 @@ void binary_printer_64(uint64_t x)
             }
       }
 
-      putchar('\n');
 }
 
 int move_from(char *move)
@@ -316,6 +318,103 @@ void print_board(char *board_display)
 	}
 }
 
+
+void print_board_debug(char *board_display, u64 *pieces)
+{
+	printf("+---+---+---+---+---+---+---+---+\tChess Program.\n");
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\n",
+		board_display[0], board_display[1], board_display[2], board_display[3],
+		board_display[4], board_display[5], board_display[6], board_display[7]);
+	
+	printf("+---+---+---+---+---+---+---+---+\t");
+	
+	binary_printer_64(pieces[0]);
+	printf("\tWhite Pawns\n");
+
+
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[8], board_display[9], board_display[10], board_display[11],
+		board_display[12], board_display[13], board_display[14], board_display[15]);
+	
+	binary_printer_64(pieces[1]);
+	printf("\tWhite Rooks\n");
+	
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[2]);
+	printf("\tWhite Knights\n");
+
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[16], board_display[17], board_display[18], board_display[19],
+		board_display[20], board_display[21], board_display[22], board_display[23]);
+
+	binary_printer_64(pieces[3]);
+	printf("\tWhite Bishops\n");
+
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[4]);
+	printf("\tWhite Queens\n");
+
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[24], board_display[25], board_display[26], board_display[27],
+		board_display[28], board_display[29], board_display[30], board_display[31]);
+
+	binary_printer_64(pieces[5]);
+	printf("\tWhite King\n");
+	
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	printf("\n");
+
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[32], board_display[33], board_display[34], board_display[35],
+		board_display[36], board_display[37], board_display[38], board_display[39]);
+
+	binary_printer_64(pieces[6]);
+	printf("\tBlack Pawns\n");
+
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[7]);
+	printf("\tBlack Rooks\n");
+
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[40], board_display[41], board_display[42], board_display[43],
+		board_display[44], board_display[45], board_display[46], board_display[47]);
+
+	binary_printer_64(pieces[8]);
+	printf("\tBlack Knights\n");
+	
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[9]);
+	printf("\tBlack Bishops\n");
+	
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+		board_display[48], board_display[49], board_display[50], board_display[51],
+		board_display[52], board_display[53], board_display[54], board_display[55]);
+
+	binary_printer_64(pieces[10]);
+	printf("\tBlack Queens\n");
+	
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[11]);
+	printf("\tBlack King\n");
+	
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\n",
+		board_display[56], board_display[57], board_display[58], board_display[59],
+		board_display[60], board_display[61], board_display[62], board_display[63]);
+
+
+	printf("+---+---+---+---+---+---+---+---+\t");
+
+	binary_printer_64(pieces[12]);
+	printf("\tEmpty Tiles\n");
+	
+}
+
 void print_indices()
 {
 	// print the indices of the tiles
@@ -338,5 +437,6 @@ void print_values(u64 *pieces)
 	{		
 		printf("%d:\t", i);
 		binary_printer_64(pieces[i]);
+		putchar('\n');
 	}
 }
