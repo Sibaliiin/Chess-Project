@@ -29,15 +29,15 @@ void update_board(char *board_display, u64 *pieces, char *board_char);
 
 int move_from(char *move);
 int move_to(char *move);
-int get_piece_from(char *move, uint64_t pieces[]);
-int get_piece_to(char *move, uint64_t pieces[]);
+int move_from_index(char *move, uint64_t pieces[]);
+int move_to_index(char *move, uint64_t pieces[]);
 
 
 
 int main()
 {
 	// setting up the pieces
-	uint64_t pieces[13];	
+	u64 pieces[15];	
 	pieces[0]  = 65280ULL;                   // white pawns
 	pieces[1]  = 129ULL;                     // white rooks
 	pieces[2]  = 66ULL;                      // white knights
@@ -51,6 +51,9 @@ int main()
 	pieces[10] = 1152921504606846976ULL;     // black queens
 	pieces[11] = 576460752303423488ULL;      // black kings
 	pieces[12] = 281474976645120ULL;         // empty tiles
+						 
+	pieces[13] = 0ULL;			 // move from
+	pieces[14] = 0ULL;			 // move to
 
 	// setting up the characters for the board
 	char board_char[13];
@@ -73,137 +76,45 @@ int main()
 	//char fen_string[100] = "8/1P3p2/7K/3R4/pP6/6k1/p3r2R/6r1 w - - 0 1";
 	char board_display[65];
 
-	/*
-	// writing to the board display string from the given fen string
-	int j = 0;
-	for (int i=0; i<sizeof(fen_string_pieces); i++)
-	{
-		// letters
-		if    (  
-			fen_string_pieces[i] == 'r' ||
-			fen_string_pieces[i] == 'n' ||
-			fen_string_pieces[i] == 'b' ||
-			fen_string_pieces[i] == 'q' ||
-			fen_string_pieces[i] == 'k' ||
-			fen_string_pieces[i] == 'p' ||
-			fen_string_pieces[i] == 'R' ||
-			fen_string_pieces[i] == 'N' ||
-			fen_string_pieces[i] == 'B' ||
-			fen_string_pieces[i] == 'Q' ||
-			fen_string_pieces[i] == 'K' ||
-			fen_string_pieces[i] == 'P'
-			)
-		{
-			board_display[j] = fen_string_pieces[i];
-			j += 1;
-		}
-
-		// numbers
-		if (fen_string_pieces[i] == '1')
-		{
-			for (int k=0; k<1; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '2')
-		{
-			for (int k=0; k<2; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '3')
-		{
-			for (int k=0; k<3; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '4')
-		{
-			for (int k=0; k<4; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '5')
-		{
-			for (int k=0; k<5; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '6')
-		{
-			for (int k=0; k<6; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '7')
-		{
-			for (int k=0; k<7; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-
-		if (fen_string_pieces[i] == '8')
-		{
-			for (int k=0; k<8; k++)
-			{
-				board_display[j] = ' ';
-				j+=1;
-			}
-		}
-		
-		// terminating character
-		if (fen_string_pieces[i] == '\0')
-		{
-			break;
-		}
-	}
-
-	*/
-	//print_board(board_display);
-	
-	update_board(board_display, pieces, board_char);
-	putchar('\n');
-	print_board_debug(board_display, pieces);
-
 	// Game Loop
 	int your_turn = 0;
 
-	while(your_turn < 1)
+	while(your_turn < 2)
 	{
-		update_board(board_display, pieces, board_char);
-		printf("Please enter a move: ");
-		scanf(" %s", move);
-		
-		printf("piece index: %d\n", get_piece_from(move, pieces));
-		printf("piece index: %d\n", get_piece_to(move, pieces));
-		
+
+		// resetting the player's move (memory safety measure)
 		move[0] = 0;
 		move[1] = 0;
 		move[2] = 0;
 		move[3] = 0;
-		
-		printf("New round! %d\n", your_turn);
+	
+	
+		// update and display the board based on the bitmap
+		update_board(board_display, pieces, board_char);
 		print_board_debug(board_display, pieces);
+
+		// The player inputs a move
+		printf("Please enter a move: ");
+		scanf(" %s", move);
+	
+		// Figure out which pieces we are trying to move
+		//
+		// These two functions give us back the "index" of the correct bitboard from the bitmap. For example:
+		// If "get_piece_from" returns "0", then we are manipulating the White Pawn's bitboard
+		// If "get_piece_to" returns "12", then we want to put a piece onto one of the empty tiles, so we are manipulating the "Empty Tiles" bitboard.
+		printf("piece index (from)\t %d\n", get_piece_from(move, pieces));	
+		printf("piece index: (to)\t %d\n", get_piece_to(move, pieces));
+		
+		binary_printer_64(pieces[get_piece_from(move, pieces)]);
+		printf(" '%c'\n", board_char[get_piece_from(move, pieces)]);
+		
+		binary_printer_64(pieces[get_piece_to(move, pieces)]);
+		printf(" '%c'\n", board_char[get_piece_to(move, pieces)]);
+
+		printf("\n+--------------\n");
+		printf("| New round!\tyour_turn = %d\n", your_turn);
+		printf("+--------------\n");
+		
 
 		your_turn += 1;
 	}
@@ -275,8 +186,8 @@ int get_piece_from(char *move, uint64_t pieces[])
 		}
 	}
 
-	printf("from_index =\t");
-	binary_printer_64(from_index);
+//	printf("from_index =\t");
+//	binary_printer_64(from_index);
 
 	return piece_index;
 }
@@ -298,8 +209,8 @@ int get_piece_to(char *move, uint64_t pieces[])
 		}
 	}
 
-	printf("to_index =\t");
-	binary_printer_64(to_index);
+//	printf("to_index =\t");
+//	binary_printer_64(to_index);
 
 	return piece_index;
 }
