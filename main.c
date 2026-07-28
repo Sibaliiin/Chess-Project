@@ -25,6 +25,7 @@ void print_board_debug(char *board_display, u64 *pieces);
 void print_indices();
 void print_values(u64 *pieces);
 void binary_printer_64(uint64_t x);
+void update_board(char *board_display, u64 *pieces, char *board_char);
 
 int move_from(char *move);
 int move_to(char *move);
@@ -51,11 +52,28 @@ int main()
 	pieces[11] = 576460752303423488ULL;      // black kings
 	pieces[12] = 281474976645120ULL;         // empty tiles
 
+	// setting up the characters for the board
+	char board_char[13];
+	board_char[0] = 'P';
+	board_char[1] = 'R';
+	board_char[2] = 'N';
+	board_char[3] = 'B';
+	board_char[4] = 'Q';
+	board_char[5] = 'K';
+	board_char[6] = 'p';
+	board_char[7] = 'r';
+	board_char[8] = 'n';
+	board_char[9] = 'b';
+	board_char[10] = 'q';
+	board_char[11] = 'k';
+	board_char[12] = ' ';
+
 	// setting up the board
-	char fen_string_pieces[100] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-	char fen_string[100] = "8/1P3p2/7K/3R4/pP6/6k1/p3r2R/6r1 w - - 0 1";
+	//char fen_string_pieces[100] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+	//char fen_string[100] = "8/1P3p2/7K/3R4/pP6/6k1/p3r2R/6r1 w - - 0 1";
 	char board_display[65];
 
+	/*
 	// writing to the board display string from the given fen string
 	int j = 0;
 	for (int i=0; i<sizeof(fen_string_pieces); i++)
@@ -160,7 +178,10 @@ int main()
 		}
 	}
 
+	*/
 	//print_board(board_display);
+	
+	update_board(board_display, pieces, board_char);
 	putchar('\n');
 	print_board_debug(board_display, pieces);
 
@@ -169,10 +190,10 @@ int main()
 
 	while(your_turn < 1)
 	{
+		update_board(board_display, pieces, board_char);
 		printf("Please enter a move: ");
 		scanf(" %s", move);
 		
-		print_values(pieces);
 		printf("piece index: %d\n", get_piece_from(move, pieces));
 		printf("piece index: %d\n", get_piece_to(move, pieces));
 		
@@ -185,26 +206,7 @@ int main()
 		print_board_debug(board_display, pieces);
 
 		your_turn += 1;
-
 	}
-	/*
-	// inputting a move
-	printf("Please enter a move: ");
-	scanf(" %s", move);
-
-	printf("piece index: %d\n", get_piece_from(move, pieces));
-	printf("piece index: %d\n", get_piece_to(move, pieces));
-
-	print_indices();
-	print_values(pieces);
-	print_board(board_display);
-
-	move[0] = 0;
-	move[1] = 0;
-	move[2] = 0;
-	move[3] = 0;
-
-	*/
 
 	printf("game loop has been stopped. stopping program!\n");
 
@@ -415,9 +417,29 @@ void print_board_debug(char *board_display, u64 *pieces)
 	
 }
 
+void update_board(char *board_display, u64 *pieces, char *board_char)
+{
+
+	for (int j=0; j<13; j++)
+	{
+		for (int i=63; i>=0; i--)
+		{
+			uint64_t index = 1;
+		
+			index = index << i;
+	    		if ((index & pieces[j]) == index)
+			{
+				board_display[63-i] = board_char[j];
+			}
+	
+		}
+
+	}
+}
+
 void print_indices()
 {
-	// print the indices of the tiles
+	// print the indices of the tiles	
 	for (int i=64; i>0; i--)
 	{
 		if ((i%8) == 0)
