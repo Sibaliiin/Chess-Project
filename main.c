@@ -19,18 +19,25 @@ char move[4];
 u64 one_64 = 1ULL;
 
 // function initilaizations
+//
 // printing functions
 void print_board(char *board_display);
 void print_board_debug(char *board_display, u64 *pieces);
 void print_indices();
 void print_values(u64 *pieces);
-void binary_printer_64(uint64_t x);
+void binary_printer_64(u64 x);
+
+// updating the board
 void update_board(char *board_display, u64 *pieces, char *board_char);
 
-int move_from(char *move);
-int move_to(char *move);
-int move_from_index(char *move, uint64_t pieces[]);
-int move_to_index(char *move, uint64_t pieces[]);
+// deciphering the player's move
+//
+// move --> tile index
+int move_from_index(char *move);
+int move_to_index(char *move);
+// index --> u64 bitboard
+u64 move_from_u64(char *move, uint64_t pieces[]);
+u64 move_to_u64(char *move, uint64_t pieces[]);
 
 
 
@@ -87,8 +94,10 @@ int main()
 		move[1] = 0;
 		move[2] = 0;
 		move[3] = 0;
-	
-	
+
+		pieces[13] = 0ULL;		
+		pieces[14] = 0ULL;	
+		
 		// update and display the board based on the bitmap
 		update_board(board_display, pieces, board_char);
 		print_board_debug(board_display, pieces);
@@ -127,11 +136,11 @@ int main()
 
 
 // function declarations
-void binary_printer_64(uint64_t x)
+void binary_printer_64(u64 x)
 {
       for (int i = 63; i >= 0; i--)
       {
-            uint64_t index = 1;
+            u64 index = 1;
             index = index << i;
 
             if ((x & index) == index)
