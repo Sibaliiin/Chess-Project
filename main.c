@@ -33,12 +33,12 @@ void update_board(char *board_display, u64 *pieces, char *board_char);
 // deciphering the player's move
 //
 // move --> tile index
-int move_from_index(char *move);
-int move_to_index(char *move);
-// index --> u64 bitboard
-u64 move_from_u64(char *move, uint64_t pieces[]);
-u64 move_to_u64(char *move, uint64_t pieces[]);
-
+int move_from_tile(char *move);
+int move_to_tile(char *move);
+// index --> bitboard
+u64 move_tile_bitboard(int tile);
+// find the piece index
+int move_bitboard_index(u64 bitboard, u64 pieces[]);
 
 
 int main()
@@ -51,6 +51,7 @@ int main()
 	pieces[3]  = 36ULL;                      // white bishops
 	pieces[4]  = 16ULL;                      // white queens
 	pieces[5]  = 8ULL;                       // white kings              
+
 	pieces[6]  = 71776119061217280ULL;       // black pawns
 	pieces[7]  = 9295429630892703744ULL;     // black rooks
 	pieces[8]  = 4755801206503243776ULL;     // black knights
@@ -111,14 +112,20 @@ int main()
 		// These two functions give us back the "index" of the correct bitboard from the bitmap. For example:
 		// If "get_piece_from" returns "0", then we are manipulating the White Pawn's bitboard
 		// If "get_piece_to" returns "12", then we want to put a piece onto one of the empty tiles, so we are manipulating the "Empty Tiles" bitboard.
-		printf("piece index (from)\t %d\n", get_piece_from(move, pieces));	
-		printf("piece index: (to)\t %d\n", get_piece_to(move, pieces));
+
+		printf("Move (from) tile:\t%d\n", move_from_tile(move));
+		printf("Move (to) tile:  \t%d\n", move_to_tile(move));
 		
-		binary_printer_64(pieces[get_piece_from(move, pieces)]);
-		printf(" '%c'\n", board_char[get_piece_from(move, pieces)]);
-		
-		binary_printer_64(pieces[get_piece_to(move, pieces)]);
-		printf(" '%c'\n", board_char[get_piece_to(move, pieces)]);
+		pieces[13] = move_tile_bitboard(move_from_tile(move));
+		pieces[14] = move_tile_bitboard(move_to_tile(move));
+
+		binary_printer_64(pieces[13]);
+		putchar('\n');
+		binary_printer_64(pieces[14]);
+		putchar('\n');
+
+		printf("Move (from) piece: '%c'\n", board_char[move_bitboard_index(pieces[13], pieces)]);
+		printf("Move (to) piece:   '%c'\n", board_char[move_bitboard_index(pieces[14], pieces)]);
 
 		printf("\n+--------------\n");
 		printf("| New round!\tyour_turn = %d\n", your_turn);
@@ -160,70 +167,49 @@ void binary_printer_64(u64 x)
 
 }
 
-int move_from(char *move)
+// move --> tile index
+int move_from_tile(char *move)
 {
 	int col = move[0] - 96;
 	int row = move[1] - 48;
-	int pos = (9-col) + (8*(row-1));
+	int tile = (9-col) + (8*(row-1));
 
-	return pos;
+	return tile;
 }
 
-int move_to(char *move)
+int move_to_tile(char *move)
 {
 	int col = move[2] - 96;
 	int row = move[3] - 48;
-	int pos = (9-col) + (8*(row-1));
+	int tile = (9-col) + (8*(row-1));
 
-	return pos;
+	return tile;
 }
 
-int get_piece_from(char *move, uint64_t pieces[])
+// tile --> bitboard
+u64 move_tile_bitboard(int tile)
 {
-	u64 piece_index;
-	u64 from_index;
+	return one_64 << (tile-1);
+}
 
-	from_index = one_64 << (move_from(move)-1);
+// find the piece index
+int move_bitboard_index(u64 bitboard, u64 pieces[])
+{
+	int index = 0;
 
 	for (int i=0; i<13; i++)
 	{
-		
-
-		if ((from_index & pieces[i]) == from_index)
+		if ((bitboard & pieces[i]) == bitboard)
 		{
-			piece_index = i;
+			index = i;
 		}
 	}
 
-//	printf("from_index =\t");
-//	binary_printer_64(from_index);
-
-	return piece_index;
+	return index;
 }
 
-int get_piece_to(char *move, uint64_t pieces[])
-{
-	u64 piece_index;
-	u64 to_index;
 
-	to_index = one_64 << (move_to(move)-1);
-
-	for (int i=0; i<13; i++)
-	{
-		
-
-		if ((to_index & pieces[i]) == to_index)
-		{
-			piece_index = i;
-		}
-	}
-
-//	printf("to_index =\t");
-//	binary_printer_64(to_index);
-
-	return piece_index;
-}
-
+// print the board
 void print_board(char *board_display)
 {
 	// draw a board
