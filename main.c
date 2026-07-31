@@ -16,6 +16,8 @@ typedef double f64;
 
 // variables
 char move[4];
+int move_from = 0;
+int move_to = 0;
 u64 one_64 = 1ULL;
 
 // function initilaizations
@@ -87,7 +89,7 @@ int main()
 	// Game Loop
 	int your_turn = 0;
 
-	while(your_turn < 2)
+	while(your_turn == 0)
 	{
 
 		// resetting the player's move (memory safety measure)
@@ -95,6 +97,9 @@ int main()
 		move[1] = 0;
 		move[2] = 0;
 		move[3] = 0;
+
+		move_from = 0;
+		move_to = 0;
 
 		pieces[13] = 0ULL;		
 		pieces[14] = 0ULL;	
@@ -107,32 +112,37 @@ int main()
 		printf("Please enter a move: ");
 		scanf(" %s", move);
 	
-		// Figure out which pieces we are trying to move
-		//
-		// These two functions give us back the "index" of the correct bitboard from the bitmap. For example:
-		// If "get_piece_from" returns "0", then we are manipulating the White Pawn's bitboard
-		// If "get_piece_to" returns "12", then we want to put a piece onto one of the empty tiles, so we are manipulating the "Empty Tiles" bitboard.
-
+		// exit the program if move[0] is 'q'
+		if (move[0] =='q')
+		{
+			break;
+		}
+		// Printing debug info:
 		printf("Move (from) tile:\t%d\n", move_from_tile(move));
 		printf("Move (to) tile:  \t%d\n", move_to_tile(move));
-		
 		pieces[13] = move_tile_bitboard(move_from_tile(move));
 		pieces[14] = move_tile_bitboard(move_to_tile(move));
-
 		binary_printer_64(pieces[13]);
 		putchar('\n');
 		binary_printer_64(pieces[14]);
 		putchar('\n');
+		move_from = move_bitboard_index(pieces[13], pieces);
+		move_to = move_bitboard_index(pieces[14], pieces);
+		printf("Move (from) piece: '%c'\n", board_char[move_from]);
+		printf("Move (to) piece:   '%c'\n", board_char[move_to]);
 
-		printf("Move (from) piece: '%c'\n", board_char[move_bitboard_index(pieces[13], pieces)]);
-		printf("Move (to) piece:   '%c'\n", board_char[move_bitboard_index(pieces[14], pieces)]);
+		// Making the move: manipulating the bitboards
+		pieces[move_from] = pieces[move_from] | pieces[14];
+		pieces[move_from] = pieces[move_from] ^ pieces[13];
+		pieces[move_to] = pieces[move_to] ^ pieces[14];
+		pieces[move_to] = pieces[move_to] | pieces[13];
 
 		printf("\n+--------------\n");
 		printf("| New round!\tyour_turn = %d\n", your_turn);
 		printf("+--------------\n");
 		
 
-		your_turn += 1;
+		//your_turn += 1;
 	}
 
 	printf("game loop has been stopped. stopping program!\n");
