@@ -239,12 +239,12 @@ void print_board(char *board_display)
 
 void print_board_debug(char *board_display, u64 *pieces)
 {
-	printf("+---+---+---+---+---+---+---+---+\tChess Program.\n");
+	printf("+---+---+---+---+---+---+---+--8+\tChess Program.\n");
 	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\n",
 		board_display[0], board_display[1], board_display[2], board_display[3],
 		board_display[4], board_display[5], board_display[6], board_display[7]);
 	
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--7+\t");
 	
 	binary_printer_64(pieces[0]);
 	printf("\tWhite Pawns\n");
@@ -257,7 +257,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[1]);
 	printf("\tWhite Rooks\n");
 	
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--6+\t");
 
 	binary_printer_64(pieces[2]);
 	printf("\tWhite Knights\n");
@@ -269,7 +269,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[3]);
 	printf("\tWhite Bishops\n");
 
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--5+\t");
 
 	binary_printer_64(pieces[4]);
 	printf("\tWhite Queens\n");
@@ -281,7 +281,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[5]);
 	printf("\tWhite King\n");
 	
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--4+\t");
 
 	printf("\n");
 
@@ -292,7 +292,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[6]);
 	printf("\tBlack Pawns\n");
 
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--3+\t");
 
 	binary_printer_64(pieces[7]);
 	printf("\tBlack Rooks\n");
@@ -304,7 +304,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[8]);
 	printf("\tBlack Knights\n");
 	
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--2+\t");
 
 	binary_printer_64(pieces[9]);
 	printf("\tBlack Bishops\n");
@@ -316,7 +316,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[10]);
 	printf("\tBlack Queens\n");
 	
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+---+---+---+---+---+---+---+--1+\t");
 
 	binary_printer_64(pieces[11]);
 	printf("\tBlack King\n");
@@ -326,7 +326,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 		board_display[60], board_display[61], board_display[62], board_display[63]);
 
 
-	printf("+---+---+---+---+---+---+---+---+\t");
+	printf("+a--+b--+c--+d--+e--+f--+g--+h--+\t");
 
 	binary_printer_64(pieces[12]);
 	printf("\tEmpty Tiles\n");
