@@ -1,6 +1,7 @@
 #include	<stdio.h>
 #include	<stdlib.h>
 #include	<stdint.h>
+#include	<stdbool.h>
 
 typedef uint8_t  u8;
 typedef uint16_t u16;
@@ -12,19 +13,24 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
+// definitions
 #define	WHITE_PAWN	0
 #define	WHITE_ROOK	1
-#define	WHITE_BISHOP	2
-#define	WHITE_KNIGHT	3
+#define	WHITE_KNIGHT	2
+#define	WHITE_BISHOP	3
 #define	WHITE_QUEEN	4
 #define	WHITE_KING	5
 #define	BLACK_PAWN	6
 #define	BLACK_ROOK	7
-#define	BLACK_BISHOP	8
-#define	BLACK_KNIGHT	9
+#define	BLACK_KNIGHT	8
+#define	BLACK_BISHOP	9
 #define	BLACK_QUEEN	10
 #define	BLACK_KING	11
 #define	EMPTY_TILE	12
+#define MOVE_FROM	13
+#define	MOVE_TO		14
+#define WHITE_PIECES	15
+#define BLACK_PIECES	16
 
 #define	RANK_1	0x00000000000000FFULL
 #define	RANK_2	0x000000000000FF00ULL
@@ -46,14 +52,15 @@ typedef int64_t i64;
 
 // variables
 char move[4];
-int move_from = 0;
-int move_to = 0;
+int from_tile = 0;
+int to_tile = 0;
+int from_index = 0;
+int to_index = 0;
 u64 one_64 = 1ULL;
 u8 legality_flags = 0;
 u8 legality_mask = 15;
+bool debug = true;
 
-// function initilaizations
-//
 // printing functions
 void print_board(char *board_display);
 void print_board_debug(char *board_display, u64 *pieces);
@@ -62,24 +69,38 @@ void print_values(u64 *pieces);
 void binary_printer_64(u64 x);
 void binary_printer_square(u64 x);
 
-// updating the board
 void update_board(char *board_display, u64 *pieces, char *board_char);
 
-// deciphering the player's move
-//
-// move --> tile index
+// move-tile-bitboard
 int move_from_tile(char *move);
 int move_to_tile(char *move);
-// index --> bitboard
 u64 move_tile_bitboard(int tile);
-// find the piece index
 int move_bitboard_index(u64 bitboard, u64 pieces[]);
+
+// generating bitboards for legality checks
+//
+// white pieces
+u64 generate_wPawn_move(int tile, u64 wPawn_move);
+u64 generate_wPawn_attack(int tile, u64 *pieces);
+u64 generate_wRook_move(int tile, u64 *pieces);
+u64 generate_wKnight_move(int tile, u64 *pieces);
+u64 generate_wBishop_move(int tile, u64 *pieces);
+u64 generate_wQueen_move(int tile, u64 *pieces);
+u64 generate_wKing_move(int tile, u64 *pieces);
+// black pieces
+u64 generate_bPawn_move(int tile, u64 *pieces);
+u64 generate_bPawn_attack(int tile, u64 *pieces);
+u64 generate_bRook_move(int tile, u64 *pieces);
+u64 generate_bKnight_move(int tile, u64 *pieces);
+u64 generate_bBishop_move(int tile, u64 *pieces);
+u64 generate_bQueen_move(int tile, u64 *pieces);
+u64 generate_bKing_move(int tile, u64 *pieces);
 
 
 int main()
 {
 	// setting up the pieces
-	u64 pieces[15];	
+	u64 pieces[17];	
 	pieces[0]  = 65280ULL;                   // white pawns
 	pieces[1]  = 129ULL;                     // white rooks
 	pieces[2]  = 66ULL;                      // white knights
@@ -93,13 +114,20 @@ int main()
 	pieces[9]  = 2594073385365405696ULL;     // black bishops
 	pieces[10] = 1152921504606846976ULL;     // black queens
 	pieces[11] = 576460752303423488ULL;      // black kings
+
 	pieces[12] = 281474976645120ULL;         // empty tiles
 						 
 	pieces[13] = 0ULL;			 // move from
 	pieces[14] = 0ULL;			 // move to
 	
+	pieces[15] = 0ULL;			 // every white piece
+	pieces[16] = 0ULL;			 // every black piece
+
 	// Movement Bitboards
 	//
+	// Pawn
+	u64 wPawn_move = 0x0000000000000100ULL;
+	
 	// Knight
 	u64 knight_move[65];
 	knight_move[0] = 0ULL;
@@ -121,7 +149,7 @@ int main()
 	knight_move[16] = 1075839008;
 	knight_move[17] = 8657044482;
 	knight_move[18] = 21609056261;
-	knight_move[19] = 21609056261;
+	knight_move[19] = 43234889994ULL;
 	knight_move[20] = 86469779988;
 	knight_move[21] = 172939559976;
 	knight_move[22] = 345879119952;
@@ -168,78 +196,6 @@ int main()
 	knight_move[63] = 4679521487814656;
 	knight_move[64] = 9077567998918656;
 	
-	binary_printer_square(knight_move[0]); putchar('\n');  // so that the compiler won't scream at me... (unused var.)
-	/*
-	// knight attack test
-	// starts on the 19th tile, so we have to shift accordingly
-	u64 knight_attack = 43234889994ULL;
-	u64 current = 0ULL;
-	for (int i=1; i<=64; i++)
-	{
-		printf("%d\n", i);
-		if (i < 19)
-		{	
-			current = knight_attack>>(19-i);
-			
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_A))
-			{
-				current = current & ~(FILE_G | FILE_H);
-			}
-	
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_B))
-			{
-				current = current & ~(FILE_H);
-			}
-
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_G))
-			{
-				current = current & ~(FILE_A);
-			}
-
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_H))
-			{
-				current = current & ~(FILE_A | FILE_B);
-			}
-
-			printf("%lu\n", current);
-		}
-
-		if (i > 19)
-		{
-			current = knight_attack<<(i-19);
-			
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_A))
-			{
-				current = current & ~(FILE_G | FILE_H);
-			}
-	
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_B))
-			{
-				current = current & ~(FILE_H);
-			}
-
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_G))
-			{
-				current = current & ~(FILE_A);
-			}
-
-			if (move_tile_bitboard(i) == (move_tile_bitboard(i) & FILE_H))
-			{
-				current = current & ~(FILE_A | FILE_B);
-			}
-
-			printf("%lu\n", current);
-		}
-
-		if (i==19)
-		{
-			printf("%lu\n", current);
-		}
-
-		knight_attack = 43234889994ULL;
-	}
-	*/
-
 	// setting up the characters for the board
 	char board_char[13];
 	board_char[0] = 'P';
@@ -256,30 +212,29 @@ int main()
 	board_char[11] = 'k';
 	board_char[12] = '.';
 
-	// setting up the board
-	//char fen_string_pieces[100] = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
-	//char fen_string[100] = "8/1P3p2/7K/3R4/pP6/6k1/p3r2R/6r1 w - - 0 1";
-	
 	// Storing the position for graphics purposes
 	char board_display[65];
 
 	// Game Loop
-	int your_turn = 0;
+	int game_loop = true;
 
-	while(your_turn == 0)
+	while(game_loop)
 	{
 		// resetting the player's move (memory safety measure)
 		move[0] = 0;
 		move[1] = 0;
 		move[2] = 0;
 		move[3] = 0;
+		
+		from_tile = 0;
+		to_tile = 0;
 
-		move_from = 0;
-		move_to = 0;
+		from_index = 0;
+		to_index= 0;
 
 		pieces[13] = 0ULL;		
 		pieces[14] = 0ULL;	
-		
+	
 		// update and display the board based on the bitmap
 		update_board(board_display, pieces, board_char);
 		print_board(board_display);
@@ -294,31 +249,125 @@ int main()
 		{
 			break;
 		}
-		
-		//printf("Move (from) tile:\t%d\n", move_from_tile(move));
-		//printf("Move (to) tile:  \t%d\n", move_to_tile(move));
-		
-		pieces[13] = move_tile_bitboard(move_from_tile(move));
-		pieces[14] = move_tile_bitboard(move_to_tile(move));
-		
-		/*
-		binary_printer_64(pieces[13]);
-		putchar('\n');
-		binary_printer_64(pieces[14]);
-		putchar('\n');
-		*/
 
-		move_from = move_bitboard_index(pieces[13], pieces);
-		move_to = move_bitboard_index(pieces[14], pieces);
-		//printf("Move (from) piece: '%c'\n", board_char[move_from]);
-		//printf("Move (to) piece:   '%c'\n", board_char[move_to]);
+		from_tile = move_from_tile(move);
+		to_tile = move_to_tile(move);
+		pieces[13] = move_tile_bitboard(from_tile);
+		pieces[14] = move_tile_bitboard(to_tile);
+		from_index = move_bitboard_index(pieces[13], pieces);
+		to_index = move_bitboard_index(pieces[14], pieces);
+	
+		u64 current_move = 0ULL;
+
+		// Check if a move is legal or not
+		switch (from_index)
+		{
+			// white pieces
+			case WHITE_PAWN:
+				printf("White pawn picked up.\n");
+				current_move = generate_wPawn_move(from_tile, wPawn_move);
+				binary_printer_square(current_move);
+
+				break;
+
+			case WHITE_ROOK:
+				printf("White rook picked up.\n");
+				current_move = generate_wRook_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			
+			case WHITE_KNIGHT:
+				printf("White knight picked up.\n");
+				current_move = generate_wKnight_move(from_tile, knight_move);
+				binary_printer_square(current_move);
+
+				break;
+
+			case WHITE_BISHOP:
+				printf("White bishop picked up.\n");
+				current_move = generate_wBishop_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			
+			case WHITE_QUEEN:
+				printf("White queen picked up.\n");
+				current_move = generate_wQueen_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+
+			case WHITE_KING:
+				printf("The white king picked up.\n");
+				current_move = generate_wKing_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			
+			// black pieces
+			case BLACK_PAWN:
+				printf("Black pawn picked up.\n");
+				current_move = generate_bPawn_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+
+			case BLACK_ROOK:
+				printf("Black rook picked up.\n");
+				current_move = generate_bRook_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			
+			case BLACK_KNIGHT:
+				printf("Black knight picked up.\n");
+				current_move = generate_bKnight_move(from_tile, knight_move);
+				binary_printer_square(current_move);
+
+				break;
+
+			case BLACK_BISHOP:
+				printf("Black bishop picked up.\n");
+				current_move = generate_bBishop_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			
+			case BLACK_QUEEN:
+				printf("Black queen picked up.\n");
+				current_move = generate_bQueen_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+
+			case BLACK_KING:
+				printf("The black king picked up.\n");
+				current_move = generate_bKing_move(from_tile, pieces);
+				binary_printer_square(current_move);
+
+				break;
+			default:
+				printf("default case!\n");
+		}
 
 		// Making the move: manipulating the bitboards
-		pieces[move_from] = pieces[move_from] | pieces[14];
-		pieces[move_from] = pieces[move_from] ^ pieces[13];
-		pieces[move_to] = pieces[move_to] ^ pieces[14];
-		pieces[move_to] = pieces[move_to] | pieces[13];
-	}
+		pieces[from_index] = pieces[from_index] | pieces[14];
+		pieces[from_index] = pieces[from_index] ^ pieces[13];
+		pieces[to_index] = pieces[to_index] ^ pieces[14];
+		pieces[to_index] = pieces[to_index] | pieces[13];
+		
+		// Print Debug information
+		if (debug == true)
+		{
+			print_values(pieces);
+			printf("from tile:\t%d\n", from_tile);
+			printf("to tile:\t%d\n", to_tile);
+			printf("from index:\t%d\t(%c)\n", from_index, board_char[from_index]);
+			printf("to index:\t%d\t(%c)\n", to_index, board_char[to_index]);
+		}
+
+	}	
 
 	printf("Closing program. Goodbye!\n");
 
@@ -430,18 +479,19 @@ void print_board(char *board_display)
 {
 	for (int i=0; i<8; i++)
 	{
-		printf("%d %c %c %c %c %c %c %c %c\n",
+		printf("%d   %c %c %c %c %c %c %c %c \n",
 		8-i,
 		board_display[8*i+0], board_display[8*i+1], board_display[8*i+2], board_display[8*i+3],
 		board_display[8*i+4], board_display[8*i+5], board_display[8*i+6], board_display[8*i+7]);
 	}
-	printf("  a b c d e f g h\n");
+	printf("\n    a b c d e f g h\n");
 }
 
+// print the board with more information
 void print_board_debug(char *board_display, u64 *pieces)
 {
 	printf("+---+---+---+---+---+---+---+--8+\tChess Program.\n");
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\n",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 8\n",
 		board_display[0], board_display[1], board_display[2], board_display[3],
 		board_display[4], board_display[5], board_display[6], board_display[7]);
 	
@@ -451,7 +501,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	printf("\tWhite Pawns\n");
 
 
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 7\t",
 		board_display[8], board_display[9], board_display[10], board_display[11],
 		board_display[12], board_display[13], board_display[14], board_display[15]);
 	
@@ -463,7 +513,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[2]);
 	printf("\tWhite Knights\n");
 
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 6\t",
 		board_display[16], board_display[17], board_display[18], board_display[19],
 		board_display[20], board_display[21], board_display[22], board_display[23]);
 
@@ -475,7 +525,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[4]);
 	printf("\tWhite Queens\n");
 
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 5\t",
 		board_display[24], board_display[25], board_display[26], board_display[27],
 		board_display[28], board_display[29], board_display[30], board_display[31]);
 
@@ -486,7 +536,7 @@ void print_board_debug(char *board_display, u64 *pieces)
 
 	printf("\n");
 
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 4\t",
 		board_display[32], board_display[33], board_display[34], board_display[35],
 		board_display[36], board_display[37], board_display[38], board_display[39]);
 
@@ -498,36 +548,36 @@ void print_board_debug(char *board_display, u64 *pieces)
 	binary_printer_64(pieces[7]);
 	printf("\tBlack Rooks\n");
 
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 3\t",
 		board_display[40], board_display[41], board_display[42], board_display[43],
 		board_display[44], board_display[45], board_display[46], board_display[47]);
 
 	binary_printer_64(pieces[8]);
 	printf("\tBlack Knights\n");
 	
-	printf("+---+---+---+---+---+---+---+--2+\t");
+	printf("+---+---+---+---+---+---+---+---+\t");
 
 	binary_printer_64(pieces[9]);
 	printf("\tBlack Bishops\n");
 	
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\t",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 2\t",
 		board_display[48], board_display[49], board_display[50], board_display[51],
 		board_display[52], board_display[53], board_display[54], board_display[55]);
 
 	binary_printer_64(pieces[10]);
 	printf("\tBlack Queens\n");
 	
-	printf("+---+---+---+---+---+---+---+--1+\t");
+	printf("+---+---+---+---+---+---+---+---+\t");
 
 	binary_printer_64(pieces[11]);
 	printf("\tBlack King\n");
 	
-	printf("| %c | %c | %c | %c | %c | %c | %c | %c |\n",
+	printf("| %c | %c | %c | %c | %c | %c | %c | %c 1\n",
 		board_display[56], board_display[57], board_display[58], board_display[59],
 		board_display[60], board_display[61], board_display[62], board_display[63]);
 
 
-	printf("+a--+b--+c--+d--+e--+f--+g--+h--+\t");
+	printf("+-a-+-b-+-c-+-d-+-e-+-f-+-g-+-h-+\t");
 
 	binary_printer_64(pieces[12]);
 	printf("\tEmpty Tiles\n");
@@ -578,4 +628,689 @@ void print_values(u64 *pieces)
 		binary_printer_64(pieces[i]);
 		putchar('\n');
 	}
+}
+
+// Move Legality checking functions
+// White - 
+// Pawn
+u64 generate_wPawn_move(int tile, u64 wPawn_move)
+{
+	u64 move = 0ULL;
+	move = wPawn_move << tile;
+
+	return move;
+}
+
+u64 generate_wPawn_attack(int tile, u64 *pieces)
+{
+	u64 move = 0ULL;
+	return move;
+}
+
+// Knight
+u64 generate_wKnight_move(int tile, u64 *knight_move)
+{
+	return knight_move[tile];
+}
+
+// Rook
+u64 generate_wRook_move(int tile, u64 *pieces)
+{
+	u64 start = move_tile_bitboard(tile);
+	u64 cross = 0ULL;
+	u64 current = 0ULL;
+
+	// moving up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*8);
+		
+		// checking if we move off the board (up)
+		if ((start & RANK_8) == start)
+		{
+			break;
+		}
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*8);
+		
+		// checking if we move off the board (up)
+		if ((start & RANK_1) == start)
+		{
+			break;
+		}
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving left
+	for (int i=1; i<8; i++)
+	{
+		current = start << i;
+		
+		// checking if we move off the board (up)
+		if ((start & FILE_A) == start)
+		{
+			break;
+		}
+		// checking if tile wraps around the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving right
+	for (int i=1; i<8; i++)
+	{
+		current = start >> i;
+		
+		// checking if we move off the board (up)
+		if ((start & FILE_H) == start)
+		{
+			break;
+		}
+		// checking if tile wraps around the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return cross;
+}
+
+u64 generate_wBishop_move(int tile, u64 *pieces)
+{
+	u64 start = move_tile_bitboard(tile);
+	u64 diag = 0ULL;
+	u64 current = 0ULL;
+
+	// moving left-up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*9);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_8 | FILE_A)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving right-up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*7);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_8 | FILE_H)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving left-down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*7);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_1 | FILE_A)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving right-down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*9);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_1 | FILE_H)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return diag;
+}
+
+u64 generate_wQueen_move(int tile, u64 *pieces)
+{
+	return 0ULL;
+}
+u64 generate_wKing_move(int tile, u64 *pieces)
+{
+	u64 start = 0ULL;
+	u64 current = 0ULL;
+	u64 move = 0ULL;
+
+	start = move_tile_bitboard(tile);
+
+	// north
+	current = start << 8;
+	if ((current & pieces[EMPTY_TILE]) == current)
+	{
+		move |= current;
+	}
+
+	// south
+	current = start >> 8;
+	if ((current & pieces[EMPTY_TILE]) == current)
+	{
+		move |= current;
+	}
+
+	// east
+	current = start >> 1;
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+	
+		}
+	}
+
+	// west
+	current = start << 1;
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// north-east
+	current = start << 7;
+
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// north-west
+	current = start << 9;
+
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// south-west
+	current = start >> 7;
+
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// south-east
+	current = start >> 9;
+
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	return move;
+}
+
+// Black - 
+// Pawn
+u64 generate_bPawn_move(int tile, u64 *pieces)
+{
+	u64 move = 0ULL;
+	return move;
+}
+
+u64 generate_bPawn_attack(int tile, u64 *pieces)
+{
+	u64 move = 0ULL;
+	return move;
+}
+
+// Knight
+u64 generate_bKnight_move(int tile, u64 *knight_move)
+{
+	return knight_move[tile];
+}
+
+// Rook
+u64 generate_bRook_move(int tile, u64 *pieces)
+{
+	u64 start = move_tile_bitboard(tile);
+	u64 cross = 0ULL;
+	u64 current = 0ULL;
+
+	// moving up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*8);
+		
+		// checking if we move off the board (up)
+		if ((start & RANK_8) == start)
+		{
+			break;
+		}
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*8);
+		
+		// checking if we move off the board (up)
+		if ((start & RANK_1) == start)
+		{
+			break;
+		}
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving left
+	for (int i=1; i<8; i++)
+	{
+		current = start << i;
+		
+		// checking if we move off the board (up)
+		if ((start & FILE_A) == start)
+		{
+			break;
+		}
+		// checking if tile wraps around the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving right
+	for (int i=1; i<8; i++)
+	{
+		current = start >> i;
+		
+		// checking if we move off the board (up)
+		if ((start & FILE_H) == start)
+		{
+			break;
+		}
+		// checking if tile wraps around the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			cross = cross | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return cross;
+}
+
+u64 generate_bBishop_move(int tile, u64 *pieces)
+{
+	u64 start = move_tile_bitboard(tile);
+	u64 diag = 0ULL;
+	u64 current = 0ULL;
+
+	// moving left-up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*9);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_8 | FILE_A)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// moving right-up
+	for (int i=1; i<8; i++)
+	{
+		current = start << (i*7);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_8 | FILE_H)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving left-down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*7);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_1 | FILE_A)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_H) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+	
+	// moving right-down
+	for (int i=1; i<8; i++)
+	{
+		current = start >> (i*9);
+		
+		// checking if we move off the board (up)
+		if ((start & (RANK_1 | FILE_H)) == start)
+		{
+			break;
+		}
+
+		// checking if next move would loop back the board
+		if ( (current & FILE_A) == current)
+		{
+			break;
+		}
+
+		// checking if the tile is empty (up)
+		if ( (current & pieces[EMPTY_TILE]) == current )
+		{
+			diag = diag | current;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return diag;
+}
+
+u64 generate_bQueen_move(int tile, u64 *pieces)
+{
+	return 0ULL;
+}
+u64 generate_bKing_move(int tile, u64 *pieces)
+{
+	u64 start = 0ULL;
+	u64 current = 0ULL;
+	u64 move = 0ULL;
+
+	start = move_tile_bitboard(tile);
+
+	// north
+	current = start << 8;
+	if ((current & pieces[EMPTY_TILE]) == current)
+	{
+		move |= current;
+	}
+
+	// south
+	current = start >> 8;
+	if ((current & pieces[EMPTY_TILE]) == current)
+	{
+		move |= current;
+	}
+
+	// east
+	current = start >> 1;
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+	
+		}
+	}
+
+	// west
+	current = start << 1;
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// north-east
+	current = start << 7;
+
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// north-west
+	current = start << 9;
+
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// south-west
+	current = start >> 7;
+
+	if ((start & FILE_A) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	// south-east
+	current = start >> 9;
+
+	if ((start & FILE_H) != start)
+	{
+		if ((current & pieces[EMPTY_TILE]) == current)
+		{
+			move |= current;
+		}
+	}
+
+	return move;
 }
