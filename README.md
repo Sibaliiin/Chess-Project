@@ -4,13 +4,15 @@ Chess Project written in C. Can be played from the terminal.
 ---
 Build using:
 
-``` bash
-gcc -std=c99 -Wall -Wextra main.c -o program
+```bash
+cmake -S . -B build
+cmake --build build
 ```
 
 Run using:
-``` bash
-./program
+
+```bash
+./build/program
 ```
 
 # How to play
