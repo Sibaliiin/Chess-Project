@@ -20,17 +20,19 @@ typedef int64_t i64;
 #define	WHITE_BISHOP	3
 #define	WHITE_QUEEN	4
 #define	WHITE_KING	5
+
 #define	BLACK_PAWN	6
 #define	BLACK_ROOK	7
 #define	BLACK_KNIGHT	8
 #define	BLACK_BISHOP	9
 #define	BLACK_QUEEN	10
 #define	BLACK_KING	11
+
 #define	EMPTY_TILE	12
-#define MOVE_FROM	13
-#define	MOVE_TO		14
-#define WHITE_PIECES	15
-#define BLACK_PIECES	16
+
+#define WHITE_PIECE	13
+#define	BLACK_PIECE	14
+
 
 #define	RANK_1	0x00000000000000FFULL
 #define	RANK_2	0x000000000000FF00ULL
@@ -52,6 +54,8 @@ typedef int64_t i64;
 
 // variables
 char move[4];
+u64 move_from = 0ULL;
+u64 move_to = 0ULL;
 int from_tile = 0;
 int to_tile = 0;
 int from_index = 0;
@@ -60,7 +64,7 @@ u64 one_64 = 1ULL;
 u8 legality_flags = 0;
 u8 legality_mask = 15;
 
-bool debug = true;
+bool debug = false;
 
 // printing functions
 void print_board(char *board_display);
@@ -101,28 +105,27 @@ u64 generate_bKing_move(int tile, u64 *pieces);
 int main()
 {
 	// setting up the board
-	u64 pieces[17];	
-	pieces[0]  = 65280ULL;                   // white pawns
-	pieces[1]  = 129ULL;                     // white rooks
-	pieces[2]  = 66ULL;                      // white knights
-	pieces[3]  = 36ULL;                      // white bishops
-	pieces[4]  = 16ULL;                      // white queens
-	pieces[5]  = 8ULL;                       // white king         
+	u64 pieces[15];	
+	pieces[WHITE_PAWN]	= 65280ULL;			// white pawns
+	pieces[WHITE_ROOK]	= 129ULL;			// white rooks
+	pieces[WHITE_KNIGHT]	= 66ULL;			// white knights
+	pieces[WHITE_BISHOP]	= 36ULL;			// white bishops
+	pieces[WHITE_QUEEN]	= 16ULL;			// white queens
+	pieces[WHITE_KING]	= 8ULL;				// white king         
 
-	pieces[6]  = 71776119061217280ULL;       // black pawns
-	pieces[7]  = 9295429630892703744ULL;     // black rooks
-	pieces[8]  = 4755801206503243776ULL;     // black knights
-	pieces[9]  = 2594073385365405696ULL;     // black bishops
-	pieces[10] = 1152921504606846976ULL;     // black queens
-	pieces[11] = 576460752303423488ULL;      // black king
-
-	pieces[12] = 281474976645120ULL;         // empty tiles
-						 
-	pieces[13] = 0ULL;			 // move from
-	pieces[14] = 0ULL;			 // move to
+	pieces[BLACK_PAWN]	= 71776119061217280ULL;      	 // black pawns
+	pieces[BLACK_ROOK]	= 9295429630892703744ULL;    	 // black rooks
+	pieces[BLACK_KNIGHT] 	= 4755801206503243776ULL;    	 // black knights
+	pieces[BLACK_BISHOP] 	= 2594073385365405696ULL;    	 // black bishops
+	pieces[BLACK_QUEEN]	= 1152921504606846976ULL;    	 // black queens
+	pieces[BLACK_KING]	= 576460752303423488ULL;     	 // black king
 	
-	pieces[15] = 0ULL;			 // every white piece
-	pieces[16] = 0ULL;			 // every black piece
+	pieces[EMPTY_TILE]	= 281474976645120ULL;        	 // empty tiles
+
+	pieces[WHITE_PIECE]	= 0ULL;				 // every white piece
+	pieces[BLACK_PIECE]	= 0ULL;				 // every black piece
+						
+						 
 
 	// Movement Bitboards
 	//
@@ -221,6 +224,11 @@ int main()
 
 	while(game_loop)
 	{
+		// recalculate white and black pieces, and empty tiles
+		pieces[WHITE_PIECE] = pieces[WHITE_PAWN] | pieces[WHITE_ROOK] | pieces[WHITE_KNIGHT] | pieces[WHITE_BISHOP] | pieces[WHITE_QUEEN] | pieces[WHITE_KING];
+		pieces[BLACK_PIECE] = pieces[BLACK_PAWN] | pieces[BLACK_ROOK] | pieces[BLACK_KNIGHT] | pieces[BLACK_BISHOP] | pieces[BLACK_QUEEN] | pieces[BLACK_KING];
+		pieces[EMPTY_TILE] = ~(pieces[WHITE_PIECE] | pieces[BLACK_PIECE]);
+
 		// resetting the player's move (memory safety measure)
 		move[0] = 0;
 		move[1] = 0;
@@ -233,13 +241,12 @@ int main()
 		from_index = 0;
 		to_index= 0;
 
-		pieces[13] = 0ULL;		
-		pieces[14] = 0ULL;	
+		move_from = 0ULL;		
+		move_to = 0ULL;	
 	
 		// update and display the board based on the bitmap
 		update_board(board_display, pieces, board_char);
 		print_board(board_display);
-		print_indices();
 
 		// The player inputs a move
 		printf("Please enter a move: ");
@@ -254,10 +261,10 @@ int main()
 
 		from_tile = move_from_tile(move);
 		to_tile = move_to_tile(move);
-		pieces[13] = move_tile_bitboard(from_tile);
-		pieces[14] = move_tile_bitboard(to_tile);
-		from_index = move_bitboard_index(pieces[13], pieces);
-		to_index = move_bitboard_index(pieces[14], pieces);
+		move_from = move_tile_bitboard(from_tile);
+		move_to = move_tile_bitboard(to_tile);
+		from_index = move_bitboard_index(move_from, pieces);
+		to_index = move_bitboard_index(move_to, pieces);
 	
 		u64 current_move = 0ULL;
 
@@ -354,14 +361,15 @@ int main()
 		}
 
 		// Making the move: manipulating the bitboards
-		pieces[from_index] = pieces[from_index] | pieces[14];
-		pieces[from_index] = pieces[from_index] ^ pieces[13];
-		pieces[to_index] = pieces[to_index] ^ pieces[14];
-		pieces[to_index] = pieces[to_index] | pieces[13];
+		pieces[from_index] = pieces[from_index] | move_to;
+		pieces[from_index] = pieces[from_index] ^ move_from;
+		pieces[to_index] = pieces[to_index] ^ move_to;
+		pieces[to_index] = pieces[to_index] | move_from;
 		
 		// Print Debug information
 		if (debug == true)
 		{
+			print_indices();
 			print_values(pieces);
 			printf("from tile:\t%d\n", from_tile);
 			printf("to tile:\t%d\n", to_tile);
